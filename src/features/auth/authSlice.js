@@ -1,0 +1,107 @@
+ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "http://localhost:5000/api/auth",
+  withCredentials: true, // cookies included
+});
+
+const initialState = {
+  user: null,
+  isAuthenticated: false,
+  loading: false,
+  error: null,
+};
+
+// LOGIN
+export const login = createAsyncThunk(
+  "auth/login",
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await api.post("/login", data);
+      // backend only sends user info in cookie-based auth
+      return res.data.user;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Login failed"
+      );
+    }
+  }
+);
+
+// REGISTER
+export const register = createAsyncThunk(
+  "auth/register",
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await api.post("/register", data);
+      return res.data.user;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Registration failed"
+      );
+    }
+  }
+);
+
+// FETCH PROFILE (protected route)
+export const fetchProfile = createAsyncThunk(
+  "auth/fetchProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await api.get("/user/profile"); // cookies sent automatically
+      return res.data.user;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Cannot fetch profile"
+      );
+    }
+  }
+);
+
+// LOGOUT
+export const logout = createAsyncThunk("auth/logout", async () => {
+  await api.post("/logout"); // optional backend logout route
+});
+
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(login.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(register.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(logout.fulfilled, () => initialState);
+  },
+});
+
+export default authSlice.reducer;
