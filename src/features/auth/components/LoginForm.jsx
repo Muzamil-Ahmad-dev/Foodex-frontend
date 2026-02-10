@@ -12,11 +12,10 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { loading, error } = useSelector((state) => state.auth);
 
   const handleChange = (e) =>
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,71 +24,41 @@ export default function LoginPage() {
 
     try {
       await dispatch(login(formData)).unwrap();
-      navigate("/orders"); // user is authenticated via cookie
-    } catch {
-      // error already handled by Redux
-    }
+      navigate("/orders");
+    } catch {}
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#2D1B0E] px-4">
-      <div className="bg-[#2D1B0E] p-6 rounded-2xl w-80 sm:w-96 shadow-2xl border-2 border-amber-900/50">
-        <div className="flex items-center justify-center space-x-2 mb-6">
+      <div className="p-6 rounded-2xl w-80 sm:w-96 shadow-2xl border border-amber-800">
+        <div className="flex justify-center gap-2 mb-4">
           <GiChefToque className="text-3xl text-amber-500" />
           <h1 className="text-2xl font-bold text-amber-400">Foodie-Frenzy</h1>
         </div>
 
-        <h2 className="text-xl font-semibold text-center text-amber-300 mb-4">
-          Login
-        </h2>
+        <h2 className="text-center text-amber-300 mb-4">Login</h2>
 
-        {error && (
-          <p className="text-red-400 text-center mb-3 text-sm">{error}</p>
-        )}
+        {error && <p className="text-red-400 text-center mb-2">{error}</p>}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Email"
-            className="px-4 py-2 rounded-xl border border-amber-700 bg-[#3A2413] text-amber-100 placeholder-amber-400 focus:ring-2 focus:ring-amber-500 outline-none"
-          />
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Password"
-            className="px-4 py-2 rounded-xl border border-amber-700 bg-[#3A2413] text-amber-100 placeholder-amber-400 focus:ring-2 focus:ring-amber-500 outline-none"
-          />
+          <input name="email" onChange={handleChange} placeholder="Email" className="input" />
+          <input name="password" type="password" onChange={handleChange} placeholder="Password" className="input" />
 
           <motion.button
-            type="submit"
             disabled={loading}
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`bg-gradient-to-r from-orange-500 to-orange-700 text-white py-2 rounded-xl font-semibold ${
-              loading ? "opacity-60 cursor-not-allowed" : ""
-            }`}
+            className="bg-orange-600 text-white py-2 rounded-xl"
           >
-            {loading ? "Logging In..." : "Login"}
+            {loading ? "Logging in..." : "Login"}
           </motion.button>
         </form>
 
-        <p className="text-center text-amber-300 mt-4 text-sm">
-          Don&apos;t have an account?{" "}
-          <Link to="/signup" className="text-orange-400 font-semibold">
-            Sign up
-          </Link>
+        <p className="text-center text-sm text-amber-300 mt-4">
+          No account? <Link to="/signup" className="text-orange-400">Sign up</Link>
         </p>
 
-        <button
-          onClick={() => navigate("/")}
-          className="inline-flex items-center gap-2 mt-4 bg-[#3A2413] text-amber-200 px-5 py-2 rounded-lg"
-        >
-          <FaHome /> Back to Home
+        <button onClick={() => navigate("/")} className="mt-4 flex items-center gap-2 text-amber-300">
+          <FaHome /> Home
         </button>
       </div>
     </div>

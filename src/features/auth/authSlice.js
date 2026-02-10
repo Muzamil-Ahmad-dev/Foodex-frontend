@@ -3,7 +3,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "https://foodex-backend--muzamilsakhi079.replit.app/api/auth",
-  withCredentials: true, // cookies included
+  withCredentials: true, // REQUIRED for cookies
 });
 
 const initialState = {
@@ -19,11 +19,10 @@ export const login = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const res = await api.post("/login", data);
-      // backend only sends user info in cookie-based auth
       return res.data.user;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Login failed"
+        err.response?.data?.message || "Invalid email or password"
       );
     }
   }
@@ -44,24 +43,22 @@ export const register = createAsyncThunk(
   }
 );
 
-// FETCH PROFILE (protected route)
+// FETCH PROFILE (COOKIE CHECK)
 export const fetchProfile = createAsyncThunk(
   "auth/fetchProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get("/user/profile"); // cookies sent automatically
+      const res = await api.get("/user/profile");
       return res.data.user;
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Cannot fetch profile"
-      );
+    } catch {
+      return rejectWithValue("Session expired");
     }
   }
 );
 
 // LOGOUT
 export const logout = createAsyncThunk("auth/logout", async () => {
-  await api.post("/logout"); // optional backend logout route
+  await api.post("/logout");
 });
 
 const authSlice = createSlice({
@@ -70,6 +67,7 @@ const authSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // LOGIN
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -83,6 +81,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // REGISTER
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -96,10 +96,14 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // FETCH PROFILE
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
       })
+
+      // LOGOUT
       .addCase(logout.fulfilled, () => initialState);
   },
 });

@@ -1,12 +1,8 @@
- 
-export const registerUser = (data) =>
-  api.post("/register", data);
+ import axios from "axios";
 
-export const loginUser = (data) =>
-  api.post("/login", data);
+const api = axios.create({
+  baseURL: "https://foodex-backend--muzamilsakhi079.replit.app/api/auth",
+  withCredentials: true, // ✅ send cookies for auth
+});
 
-export const fetchProfile = () =>
-  api.get("/user/profile");
-
-export const logoutUser = () =>
-  api.post("/logout");
+export default api;

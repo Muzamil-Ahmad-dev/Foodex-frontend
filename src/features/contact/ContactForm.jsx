@@ -16,7 +16,7 @@ const ContactForm = () => {
     const fetchTicket = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/contact?email=${email}`,
+          `https://foodex-backend--muzamilsakhi079.replit.app/api/contact?email=${email}`,
           { withCredentials: true }
         );
         if (res.data.data && res.data.data.length > 0) {
@@ -37,7 +37,7 @@ const ContactForm = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/contact",
+        "https://foodex-backend--muzamilsakhi079.replit.app/api/contact",
         { name, email, message },
         { withCredentials: true }
       );
