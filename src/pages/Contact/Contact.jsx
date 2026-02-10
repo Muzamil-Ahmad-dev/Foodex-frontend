@@ -1,8 +1,10 @@
  import React from 'react'
- 
- function Contact() {
+ import ContactForm from '../../features/contact/ContactForm'
+  function Contact() {
    return (
-     <div>Contact</div>
+     <div>
+      <ContactForm/>
+      </div>
    )
  }
  
