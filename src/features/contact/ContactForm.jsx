@@ -16,7 +16,7 @@ const ContactForm = () => {
     const fetchTicket = async () => {
       try {
         const res = await axios.get(
-          `https://foodex-backend--muzamilsakhi079.replit.app/api/contact?email=${email}`,
+          `http://localhost:5000/api/contact?email=${email}`,
           { withCredentials: true }
         );
         if (res.data.data && res.data.data.length > 0) {
