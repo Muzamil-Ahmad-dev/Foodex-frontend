@@ -2,7 +2,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders } from '../../features/orders/ordersSlice';
 
-const Orders = () => {
+const UserOrder = () => {
   const dispatch = useDispatch();
   const { orders, loading } = useSelector((state) => state.orders);
 
@@ -34,4 +34,4 @@ const Orders = () => {
   );
 };
 
-export default Orders;
+export default UserOrder;

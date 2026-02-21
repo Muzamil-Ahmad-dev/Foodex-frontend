@@ -11,8 +11,7 @@ import Contact from "../pages/Contact/Contact";
 import Cart from "../pages/cart/cart";
 import About from "../pages/About/About";
 import Checkout from "../pages/Checkout/Checkout";
-import Orders from "../pages/orders/Orders";
-
+import UserOrder from "../pages/Orders/Orders";
 // Auth
 import LoginPage from "../features/auth/components/LoginForm";
 import SignUpPage from "../features/auth/components/RegisterForm";
@@ -31,7 +30,7 @@ function AppRouter() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<Orders />} />
+          <Route path="/usersOrders" element={<UserOrder />} />
 
           {/* Auth (still public) */}
           <Route path="/login" element={<LoginPage />} />
