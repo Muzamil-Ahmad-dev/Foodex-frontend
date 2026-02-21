@@ -1,20 +1,18 @@
- // components/navbar/Navbar.jsx
-import React, { useState, useEffect } from "react";
+ import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import {
-  FaHome,
-  FaBoxOpen,
-  FaPhoneAlt,
-  FaInfoCircle,
-} from "react-icons/fa";
+import { FaHome, FaBoxOpen, FaPhoneAlt, FaInfoCircle } from "react-icons/fa";
 import { MdMenuBook } from "react-icons/md";
 import { FiShoppingCart } from "react-icons/fi";
 import { GiChefToque } from "react-icons/gi";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [cartCount, setCartCount] = useState(2);
   const navigate = useNavigate();
+
+  // Get cart items from Redux
+  const cartItems = useSelector((state) => state.cart.items);
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
