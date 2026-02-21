@@ -10,7 +10,7 @@ export const store = configureStore({
     categories: categoriesReducer,
     menu: menuReducer,
     cart: cartReducer,
-    order: ordersReducer,
+     orders: ordersReducer,  
 
   },
 })
