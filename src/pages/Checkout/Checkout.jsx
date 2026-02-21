@@ -9,23 +9,27 @@ import { createOrder } from '../../features/orders/ordersSlice';
 import { clearCart } from '../../features/cart/cartSlice';
 import CardPayment from '../../features/payment/components/CardPaymentForm';
 
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Backend API URL
 const API_URL = import.meta.env.VITE_API_URL || 'https://foodex-backend--muzamilsakhi079.replit.app/api';
 
+// Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_KEY);
 
 const Checkout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, total } = useSelector((state) => state.cart);
-  const { creatingOrder } = useSelector((state) => state.orders);
+
+  // Cart state
+  const { items, total } = useSelector((state) => state.cart || { items: [], total: 0 });
+  // Orders state
+  const { creatingOrder } = useSelector((state) => state.orders || { creatingOrder: false });
 
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [placingOrder, setPlacingOrder] = useState(false);
 
-  if (!items.length) return <p>Cart is empty</p>;
+  if (!items || items.length === 0) return <p>Cart is empty</p>;
 
   const placeOrder = async (paymentStatus) => {
     if (!address || !phone) return alert('Please provide address and phone number');
@@ -46,6 +50,7 @@ const Checkout = () => {
       };
 
       const orderRes = await dispatch(createOrder(orderPayload));
+
       if (orderRes.meta.requestStatus !== 'fulfilled') {
         alert(`Order failed: ${orderRes.payload || 'Unknown error'}`);
         setPlacingOrder(false);

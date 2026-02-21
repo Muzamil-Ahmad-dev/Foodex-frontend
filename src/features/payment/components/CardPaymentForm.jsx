@@ -2,7 +2,7 @@
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://foodex-backend--muzamilsakhi079.replit.app/api';
 
 const CardPayment = ({ total, onPaymentSuccess }) => {
   const stripe = useStripe();
@@ -68,7 +68,7 @@ const CardPayment = ({ total, onPaymentSuccess }) => {
         disabled={loading}
         className="mt-4 w-full bg-blue-600 text-white py-2 rounded"
       >
-        {loading ? 'Processing Payment...' : `Pay ₹${total}`}
+        {loading ? 'Processing Payment...' : `Pay PKR${total}`}
       </button>
     </div>
   );
