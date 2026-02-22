@@ -12,7 +12,7 @@ import Cart from "../pages/cart/cart";
 import About from "../pages/About/About";
 import Checkout from "../pages/Checkout/Checkout";
 import UserOrder from "../pages/Orders/Orders";
-// Auth
+ // Auth
 import LoginPage from "../features/auth/components/LoginForm";
 import SignUpPage from "../features/auth/components/RegisterForm";
 
@@ -30,7 +30,7 @@ function AppRouter() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/usersOrders" element={<UserOrder />} />
+          <Route path="/orders" element={<UserOrder />} />
 
           {/* Auth (still public) */}
           <Route path="/login" element={<LoginPage />} />
