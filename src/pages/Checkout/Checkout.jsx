@@ -13,19 +13,15 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://foodex-backend--muzamilsakhi079.replit.app/api";
 
-// ✅ Use Stripe publishable key here
+// ✅ Stripe publishable key from Vite env
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const Checkout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { items, total } = useSelector(
-    (state) => state.cart || { items: [], total: 0 }
-  );
-  const { creatingOrder } = useSelector(
-    (state) => state.orders || { creatingOrder: false }
-  );
+  const { items, total } = useSelector((state) => state.cart || { items: [], total: 0 });
+  const { creatingOrder } = useSelector((state) => state.orders || { creatingOrder: false });
 
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [address, setAddress] = useState("");
@@ -34,23 +30,14 @@ const Checkout = () => {
 
   if (!items || items.length === 0) return <p>Cart is empty</p>;
 
-  // Updated placeOrder to accept object for card payment
-  const placeOrder = async (paymentData) => {
+  // ✅ Centralized place order function
+  const placeOrder = async (paymentStatus = "Pending") => {
     if (!address || !phone) return alert("Please provide address and phone number");
+
     setPlacingOrder(true);
 
     try {
-      let paymentStatus = "Pending";
-      let stripePaymentIntentId = null;
-
-      // If paymentData is an object, extract values (CARD flow)
-      if (typeof paymentData === "object") {
-        paymentStatus = paymentData.paymentStatus || "Paid";
-        stripePaymentIntentId = paymentData.stripePaymentIntentId || null;
-      } else if (typeof paymentData === "string") {
-        paymentStatus = paymentData;
-      }
-
+      // 1️⃣ Prepare order payload
       const orderPayload = {
         items: items.map((i) => ({
           menuItem: i._id,
@@ -62,9 +49,9 @@ const Checkout = () => {
         contactNumber: phone,
         paymentMethod,
         paymentStatus,
-        stripePaymentIntentId,
       };
 
+      // 2️⃣ Create order in backend
       const orderRes = await dispatch(createOrder(orderPayload));
 
       if (orderRes.meta.requestStatus !== "fulfilled") {
@@ -73,19 +60,23 @@ const Checkout = () => {
         return;
       }
 
-      const orderId = orderRes.payload._id;
+      const { orderKey } = orderRes.payload;
 
+      // 3️⃣ Handle payment
       if (paymentMethod === "COD") {
-        await axios.post(`${API_URL}/payments/cod`, { orderId });
+        // Notify backend for COD (optional)
+        await axios.post(`${API_URL}/payments/cod`, { orderKey });
         alert("Order placed successfully! Payment on delivery.");
       } else {
+        // Card payment is already confirmed in CardPaymentForm
         alert("Order placed successfully! Payment completed.");
       }
 
+      // 4️⃣ Clear cart and redirect
       dispatch(clearCart());
       navigate("/orders");
     } catch (err) {
-      console.error(err);
+      console.error("Checkout Error:", err);
       alert(`Order failed: ${err.message}`);
     } finally {
       setPlacingOrder(false);
@@ -96,6 +87,7 @@ const Checkout = () => {
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Checkout</h1>
 
+      {/* Delivery Address & Phone */}
       <textarea
         placeholder="Delivery Address"
         value={address}
@@ -109,6 +101,7 @@ const Checkout = () => {
         className="border p-2 w-full mb-4 rounded"
       />
 
+      {/* Payment Method */}
       <h2 className="font-semibold mb-2">Payment Method</h2>
       <label className="block mb-1">
         <input
@@ -127,15 +120,14 @@ const Checkout = () => {
         Card Payment
       </label>
 
+      {/* Card Payment */}
       {paymentMethod === "CARD" && (
         <Elements stripe={stripePromise}>
-          <CardPayment
-            total={total}
-            onPaymentSuccess={(paymentData) => placeOrder(paymentData)}
-          />
+          <CardPayment total={total} onPaymentSuccess={(status) => placeOrder(status)} />
         </Elements>
       )}
 
+      {/* COD Payment Button */}
       {paymentMethod === "COD" && (
         <button
           onClick={() => placeOrder("Pending")}

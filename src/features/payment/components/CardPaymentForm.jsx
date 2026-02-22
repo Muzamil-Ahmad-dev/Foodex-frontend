@@ -2,6 +2,7 @@
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import axios from "axios";
 
+// ✅ Use your public frontend URL or Vite env variable
 const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://foodex-backend--muzamilsakhi079.replit.app/api";
@@ -25,22 +26,21 @@ const CardPayment = ({ total, onPaymentSuccess }) => {
         amount: Number(total),
       });
 
-      if (!data?.clientSecret || !data?.paymentIntentId)
-        throw new Error("Payment initialization failed");
+      if (!data?.success || !data?.clientSecret || !data?.paymentIntentId) {
+        console.error("Stripe backend response:", data);
+        throw new Error("Payment initialization failed. Check backend logs.");
+      }
 
-      const { clientSecret, paymentIntentId } = data;
+      const clientSecret = data.clientSecret;
 
-      // 2️⃣ Confirm payment with Stripe
+      // 2️⃣ Confirm payment with Stripe Elements
       const cardElement = elements.getElement(CardElement);
-      const { paymentIntent, error } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: cardElement,
-            billing_details: { name: cardName },
-          },
-        }
-      );
+      const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: { name: cardName },
+        },
+      });
 
       if (error) {
         console.error("Stripe confirmCardPayment error:", error);
@@ -49,14 +49,8 @@ const CardPayment = ({ total, onPaymentSuccess }) => {
       }
 
       if (paymentIntent?.status === "succeeded") {
-        // ✅ Payment successful
         alert("Payment successful!");
-
-        // Pass both status and paymentIntentId to Checkout
-        onPaymentSuccess({
-          paymentStatus: "Paid",
-          stripePaymentIntentId: paymentIntentId,
-        });
+        onPaymentSuccess("Paid");
       } else {
         alert(`Payment status: ${paymentIntent?.status || "unknown"}`);
       }
@@ -84,9 +78,7 @@ const CardPayment = ({ total, onPaymentSuccess }) => {
         onClick={handlePayment}
         disabled={loading}
         className={`mt-2 w-full py-2 rounded text-white ${
-          loading
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+          loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
         {loading ? "Processing Payment..." : `Pay PKR ${total}`}
