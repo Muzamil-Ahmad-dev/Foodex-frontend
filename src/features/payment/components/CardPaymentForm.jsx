@@ -1,6 +1,7 @@
  import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
@@ -19,38 +20,34 @@ const CardPaymentForm = ({ total, onPaymentSuccess }) => {
     if (!total || total <= 0) return alert("Invalid payment amount");
 
     setLoading(true);
-
     try {
-      // 1️⃣ Create PaymentIntent on backend
       const { data } = await axios.post(`${API_URL}/payments/stripe`, {
         amount: Number(total),
       });
 
-      if (!data?.success || !data?.clientSecret || !data?.paymentIntentId) {
-        throw new Error("Payment initialization failed. Check backend logs.");
+      if (!data?.success || !data?.clientSecret) {
+        throw new Error("Payment initialization failed");
       }
 
-      const clientSecret = data.clientSecret;
-
-      // 2️⃣ Confirm payment with Stripe Elements
       const cardElement = elements.getElement(CardElement);
-      const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: { name: cardName },
-        },
-      });
+      const { paymentIntent, error } = await stripe.confirmCardPayment(
+        data.clientSecret,
+        {
+          payment_method: {
+            card: cardElement,
+            billing_details: { name: cardName },
+          },
+        }
+      );
 
       if (error) throw new Error(error.message);
 
       if (paymentIntent?.status === "succeeded") {
-        // ✅ Pass both status and PaymentIntent ID to Checkout
         onPaymentSuccess("Paid", paymentIntent.id);
       } else {
-        throw new Error(`Payment failed with status: ${paymentIntent?.status}`);
+        throw new Error(`Payment failed: ${paymentIntent?.status}`);
       }
     } catch (err) {
-      console.error("Stripe Payment Error:", err);
       alert(`Payment error: ${err.message}`);
     } finally {
       setLoading(false);
@@ -58,27 +55,63 @@ const CardPaymentForm = ({ total, onPaymentSuccess }) => {
   };
 
   return (
-    <div className="border p-4 rounded my-4 shadow-sm bg-white">
-      <input
-        type="text"
-        placeholder="Cardholder Name"
-        className="border p-2 w-full mb-2 rounded"
-        value={cardName}
-        onChange={(e) => setCardName(e.target.value)}
-      />
-      <div className="border p-4 rounded mb-4 bg-gray-50">
-        <CardElement options={{ hidePostalCode: false }} />
+    <motion.div
+      className="bg-[#3D2914] border border-amber-700/30 rounded-xl p-4 sm:p-6 shadow-lg"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* Cardholder Name */}
+      <div className="mb-4">
+        <label className="block text-sm text-amber-200 mb-1">
+          Cardholder Name
+        </label>
+        <input
+          type="text"
+          placeholder="John Doe"
+          value={cardName}
+          onChange={(e) => setCardName(e.target.value)}
+          className="w-full p-3 rounded bg-[#4A2F17] border border-amber-700/30 text-white placeholder-amber-200/60 focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
       </div>
-      <button
+
+      {/* Card Element */}
+      <div className="mb-4">
+        <label className="block text-sm text-amber-200 mb-1">
+          Card Details
+        </label>
+        <div className="p-4 rounded bg-[#4A2F17] border border-amber-700/30">
+          <CardElement
+            options={{
+              hidePostalCode: false,
+              style: {
+                base: {
+                  color: "#FDE68A",
+                  fontSize: "16px",
+                  "::placeholder": { color: "#FCD34D99" },
+                },
+                invalid: { color: "#F87171" },
+              },
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Pay Button */}
+      <motion.button
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
         onClick={handlePayment}
         disabled={loading}
-        className={`mt-2 w-full py-2 rounded text-white ${
-          loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+        className={`w-full py-3 rounded-xl font-bold transition ${
+          loading
+            ? "bg-gray-500 cursor-not-allowed"
+            : "bg-amber-400 hover:bg-amber-500 text-gray-900"
         }`}
       >
         {loading ? "Processing Payment..." : `Pay ₹${total}`}
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   );
 };
 

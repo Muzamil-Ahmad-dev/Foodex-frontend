@@ -1,17 +1,67 @@
-  import React, { useState } from 'react';
-import Categories from '../../features/categories/components/Categories';
-import MenuItems from '../../features/menu/components/MenuItems';
+ import React, { useState } from "react";
+import { motion } from "framer-motion";
+import Categories from "../../features/categories/components/Categories";
+import MenuItems from "../../features/menu/components/MenuItems";
 
 const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
+  // Motion variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-bold p-4">Our Menu</h1>
-      <Categories selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
-      <MenuItems selectedCategory={selectedCategory} />
+    <div className="min-h-screen bg-[#3D2914] text-white">
+      {/* Header */}
+      <motion.div
+        className="text-center py-8 px-4 sm:py-12 sm:px-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.h1
+          className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
+          style={{ color: "#F59E0B" }}
+          variants={itemVariants}
+        >
+          Our Menu
+        </motion.h1>
+        <motion.p
+          className="text-amber-100/80 max-w-xl sm:max-w-2xl mx-auto text-sm sm:text-base"
+          variants={itemVariants}
+        >
+          Browse our delicious offerings! Select a category to find your favorite dishes.
+        </motion.p>
+      </motion.div>
+
+      {/* Categories */}
+      <motion.div
+        className="px-4 sm:px-6 mb-6 md:mb-8 overflow-x-auto"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <Categories selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+      </motion.div>
+
+      {/* Menu Items */}
+      <motion.div
+        className="px-4 sm:px-6 pb-16"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <MenuItems selectedCategory={selectedCategory} />
+      </motion.div>
     </div>
   );
 };
 
-export default Menu;  
+export default Menu;

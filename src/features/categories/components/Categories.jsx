@@ -1,6 +1,7 @@
- import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchCategories } from '../categoriesSlice';
+ import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCategories } from "../categoriesSlice";
+import { motion } from "framer-motion";
 
 const Categories = ({ selectedCategory, setSelectedCategory }) => {
   const dispatch = useDispatch();
@@ -10,31 +11,63 @@ const Categories = ({ selectedCategory, setSelectedCategory }) => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  if (loading) return <p>Loading categories...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (loading)
+    return <p className="p-4 text-gray-300 text-center">Loading categories...</p>;
+  if (error)
+    return <p className="p-4 text-red-400 text-center">Error: {error}</p>;
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  };
 
   return (
-    <div className="flex space-x-4 overflow-x-auto p-4">
-      <div
-        className={`px-4 py-2 rounded-lg shadow cursor-pointer ${
-          selectedCategory === null ? 'bg-yellow-300' : 'bg-yellow-100 hover:bg-yellow-200'
-        }`}
+    <motion.div
+      className="flex space-x-3 sm:space-x-4 overflow-x-auto py-4 px-2 sm:px-4 md:px-6 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-transparent"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* All Category */}
+      <motion.div
+        key="all"
+        className={`flex-shrink-0 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg cursor-pointer font-semibold text-gray-900 shadow-md 
+          ${
+            selectedCategory === null
+              ? "bg-amber-400 text-white"
+              : "bg-amber-200 hover:bg-amber-300"
+          }`}
         onClick={() => setSelectedCategory(null)}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        variants={itemVariants}
       >
         All
-      </div>
+      </motion.div>
+
       {categories.map((cat) => (
-        <div
+        <motion.div
           key={cat._id}
-          className={`px-4 py-2 rounded-lg shadow cursor-pointer ${
-            selectedCategory === cat._id ? 'bg-yellow-300' : 'bg-yellow-100 hover:bg-yellow-200'
-          }`}
+          className={`flex-shrink-0 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg cursor-pointer font-semibold text-gray-900 shadow-md 
+            ${
+              selectedCategory === cat._id
+                ? "bg-amber-400 text-white"
+                : "bg-amber-200 hover:bg-amber-300"
+            }`}
           onClick={() => setSelectedCategory(cat._id)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          variants={itemVariants}
         >
           {cat.name}
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 };
 

@@ -4,6 +4,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 import { createOrder } from "../../features/orders/ordersSlice";
 import { clearCart } from "../../features/cart/cartSlice";
@@ -19,29 +20,23 @@ const Checkout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { items, total } = useSelector(
-    (state) => state.cart || { items: [], total: 0 }
-  );
-  const { creatingOrder } = useSelector(
-    (state) => state.orders || { creatingOrder: false }
-  );
+  const { items, total } = useSelector((state) => state.cart);
+  const { creatingOrder } = useSelector((state) => state.orders);
 
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [placingOrder, setPlacingOrder] = useState(false);
 
-  if (!items || items.length === 0) return <p>Cart is empty</p>;
+  if (!items || items.length === 0)
+    return <p className="text-center text-gray-400 p-10">Cart is empty</p>;
 
-  // ✅ Centralized place order function
   const placeOrder = async (paymentStatus = "Pending", stripePaymentIntentId = null) => {
-    if (!address || !phone) return alert("Please provide address and phone number");
+    if (!address || !phone) return alert("Please provide address and phone");
 
     setPlacingOrder(true);
-
     try {
-      // ⚡ Build order payload WITHOUT totalAmount (Mongoose calculates automatically)
-      const orderPayload = {
+      const payload = {
         items: items.map((i) => ({
           menuItem: i._id,
           quantity: i.quantity,
@@ -51,97 +46,120 @@ const Checkout = () => {
         contactNumber: phone,
         paymentMethod,
         paymentStatus,
-        // ✅ Only include stripePaymentIntentId for CARD payments
         ...(paymentMethod === "CARD" && { stripePaymentIntentId }),
       };
 
-      // 1️⃣ Create order in backend
-      const orderRes = await dispatch(createOrder(orderPayload));
+      const res = await dispatch(createOrder(payload));
+      if (res.meta.requestStatus !== "fulfilled") throw new Error("Order failed");
 
-      if (orderRes.meta.requestStatus !== "fulfilled") {
-        throw new Error(orderRes.payload || "Order creation failed");
-      }
+      const { orderKey } = res.payload;
 
-      const { orderKey } = orderRes.payload;
-
-      // 2️⃣ COD notification
       if (paymentMethod === "COD") {
         await axios.post(`${API_URL}/payments/cod`, { orderKey });
-        alert("Order placed successfully! Payment on delivery.");
-      } else {
-        alert("Order placed successfully! Payment completed.");
       }
 
-      // 3️⃣ Clear cart & navigate
       dispatch(clearCart());
       navigate("/orders");
     } catch (err) {
-      console.error("Checkout Error:", err);
-      alert(`Order failed: ${err.message}`);
+      alert(err.message);
     } finally {
       setPlacingOrder(false);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Checkout</h1>
+    <div className="min-h-screen bg-[#3D2914] text-white px-4 py-10">
+      <motion.div
+        className="max-w-3xl mx-auto bg-[#4A2F17]/80 rounded-2xl shadow-xl border border-amber-700/30 p-5 sm:p-8"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Header */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-center mb-6 text-amber-400">
+          Checkout
+        </h1>
 
-      {/* Delivery Address & Phone */}
-      <textarea
-        placeholder="Delivery Address"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-        className="border p-2 w-full mb-2 rounded"
-      />
-      <input
-        placeholder="Phone Number"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        className="border p-2 w-full mb-4 rounded"
-      />
-
-      {/* Payment Method */}
-      <h2 className="font-semibold mb-2">Payment Method</h2>
-      <label className="block mb-1">
-        <input
-          type="radio"
-          checked={paymentMethod === "COD"}
-          onChange={() => setPaymentMethod("COD")}
-        />{" "}
-        Cash on Delivery
-      </label>
-      <label className="block mb-4">
-        <input
-          type="radio"
-          checked={paymentMethod === "CARD"}
-          onChange={() => setPaymentMethod("CARD")}
-        />{" "}
-        Card Payment
-      </label>
-
-      {/* Card Payment */}
-      {paymentMethod === "CARD" && (
-        <Elements stripe={stripePromise}>
-          <CardPaymentForm
-            total={total}
-            onPaymentSuccess={(status, stripePaymentIntentId) =>
-              placeOrder(status, stripePaymentIntentId)
-            }
+        {/* Address */}
+        <div className="mb-4">
+          <label className="block mb-1 text-sm text-amber-200">
+            Delivery Address
+          </label>
+          <textarea
+            className="w-full p-3 rounded bg-[#3D2914] border border-amber-700/30 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            rows={3}
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
           />
-        </Elements>
-      )}
+        </div>
 
-      {/* COD Payment Button */}
-      {paymentMethod === "COD" && (
-        <button
-          onClick={() => placeOrder("Pending")}
-          disabled={creatingOrder || placingOrder}
-          className="mt-4 bg-green-600 text-white px-6 py-2 rounded w-full"
-        >
-          {placingOrder ? "Placing Order..." : `Place Order ₹${total}`}
-        </button>
-      )}
+        {/* Phone */}
+        <div className="mb-6">
+          <label className="block mb-1 text-sm text-amber-200">
+            Phone Number
+          </label>
+          <input
+            className="w-full p-3 rounded bg-[#3D2914] border border-amber-700/30 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </div>
+
+        {/* Payment Method */}
+        <h2 className="font-semibold mb-3 text-lg text-amber-300">
+          Payment Method
+        </h2>
+
+        <div className="space-y-2 mb-6">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              checked={paymentMethod === "COD"}
+              onChange={() => setPaymentMethod("COD")}
+            />
+            Cash on Delivery
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              checked={paymentMethod === "CARD"}
+              onChange={() => setPaymentMethod("CARD")}
+            />
+            Card Payment
+          </label>
+        </div>
+
+        {/* Card Payment */}
+        {paymentMethod === "CARD" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Elements stripe={stripePromise}>
+              <CardPaymentForm
+                total={total}
+                onPaymentSuccess={(status, intentId) =>
+                  placeOrder(status, intentId)
+                }
+              />
+            </Elements>
+          </motion.div>
+        )}
+
+        {/* COD Button */}
+        {paymentMethod === "COD" && (
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            disabled={creatingOrder || placingOrder}
+            onClick={() => placeOrder("Pending")}
+            className="w-full mt-4 bg-amber-400 hover:bg-amber-500 text-gray-900 font-bold py-3 rounded-xl shadow-md transition"
+          >
+            {placingOrder ? "Placing Order..." : `Place Order Rs ${total}`}
+          </motion.button>
+        )}
+      </motion.div>
     </div>
   );
 };
