@@ -19,8 +19,12 @@ const Checkout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { items, total } = useSelector((state) => state.cart || { items: [], total: 0 });
-  const { creatingOrder } = useSelector((state) => state.orders || { creatingOrder: false });
+  const { items, total } = useSelector(
+    (state) => state.cart || { items: [], total: 0 }
+  );
+  const { creatingOrder } = useSelector(
+    (state) => state.orders || { creatingOrder: false }
+  );
 
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [address, setAddress] = useState("");
@@ -47,7 +51,8 @@ const Checkout = () => {
         contactNumber: phone,
         paymentMethod,
         paymentStatus,
-        stripePaymentIntentId, // only for CARD
+        // ✅ Only include stripePaymentIntentId for CARD payments
+        ...(paymentMethod === "CARD" && { stripePaymentIntentId }),
       };
 
       // 1️⃣ Create order in backend
