@@ -2,14 +2,14 @@
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import axios from "axios";
 
-// ✅ Use your public frontend URL or Vite env variable
 const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://foodex-backend--muzamilsakhi079.replit.app/api";
 
-const CardPayment = ({ total, onPaymentSuccess }) => {
+const CardPaymentForm = ({ total, onPaymentSuccess }) => {
   const stripe = useStripe();
   const elements = useElements();
+
   const [cardName, setCardName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,11 +27,11 @@ const CardPayment = ({ total, onPaymentSuccess }) => {
       });
 
       if (!data?.success || !data?.clientSecret || !data?.paymentIntentId) {
-        console.error("Stripe backend response:", data);
         throw new Error("Payment initialization failed. Check backend logs.");
       }
 
       const clientSecret = data.clientSecret;
+      const paymentIntentId = data.paymentIntentId;
 
       // 2️⃣ Confirm payment with Stripe Elements
       const cardElement = elements.getElement(CardElement);
@@ -43,16 +43,14 @@ const CardPayment = ({ total, onPaymentSuccess }) => {
       });
 
       if (error) {
-        console.error("Stripe confirmCardPayment error:", error);
-        alert(`Payment failed: ${error.message}`);
-        return;
+        throw new Error(error.message);
       }
 
-      if (paymentIntent?.status === "succeeded") {
-        alert("Payment successful!");
-        onPaymentSuccess("Paid");
+      if (paymentIntent.status === "succeeded") {
+        // ✅ Pass both status and PaymentIntent ID
+        onPaymentSuccess("Paid", paymentIntent.id);
       } else {
-        alert(`Payment status: ${paymentIntent?.status || "unknown"}`);
+        throw new Error(`Payment failed with status: ${paymentIntent.status}`);
       }
     } catch (err) {
       console.error("Stripe Payment Error:", err);
@@ -81,10 +79,10 @@ const CardPayment = ({ total, onPaymentSuccess }) => {
           loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
-        {loading ? "Processing Payment..." : `Pay PKR ${total}`}
+        {loading ? "Processing Payment..." : `Pay ₹${total}`}
       </button>
     </div>
   );
 };
 
-export default CardPayment;
+export default CardPaymentForm;

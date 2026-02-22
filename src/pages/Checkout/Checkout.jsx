@@ -7,13 +7,12 @@ import axios from "axios";
 
 import { createOrder } from "../../features/orders/ordersSlice";
 import { clearCart } from "../../features/cart/cartSlice";
-import CardPayment from "../../features/payment/components/CardPaymentForm";
+import CardPaymentForm from "../../features/payment/components/CardPaymentForm";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://foodex-backend--muzamilsakhi079.replit.app/api";
 
-// ✅ Stripe publishable key from Vite env
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const Checkout = () => {
@@ -31,13 +30,12 @@ const Checkout = () => {
   if (!items || items.length === 0) return <p>Cart is empty</p>;
 
   // ✅ Centralized place order function
-  const placeOrder = async (paymentStatus = "Pending") => {
+  const placeOrder = async (paymentStatus = "Pending", stripePaymentIntentId = null) => {
     if (!address || !phone) return alert("Please provide address and phone number");
 
     setPlacingOrder(true);
 
     try {
-      // 1️⃣ Prepare order payload
       const orderPayload = {
         items: items.map((i) => ({
           menuItem: i._id,
@@ -49,30 +47,27 @@ const Checkout = () => {
         contactNumber: phone,
         paymentMethod,
         paymentStatus,
+        stripePaymentIntentId, // ✅ Must send for CARD
       };
 
-      // 2️⃣ Create order in backend
+      // 1️⃣ Create order
       const orderRes = await dispatch(createOrder(orderPayload));
 
       if (orderRes.meta.requestStatus !== "fulfilled") {
-        alert(`Order failed: ${orderRes.payload || "Unknown error"}`);
-        setPlacingOrder(false);
-        return;
+        throw new Error(orderRes.payload || "Order creation failed");
       }
 
       const { orderKey } = orderRes.payload;
 
-      // 3️⃣ Handle payment
+      // 2️⃣ COD notification
       if (paymentMethod === "COD") {
-        // Notify backend for COD (optional)
         await axios.post(`${API_URL}/payments/cod`, { orderKey });
         alert("Order placed successfully! Payment on delivery.");
       } else {
-        // Card payment is already confirmed in CardPaymentForm
         alert("Order placed successfully! Payment completed.");
       }
 
-      // 4️⃣ Clear cart and redirect
+      // 3️⃣ Clear cart & navigate
       dispatch(clearCart());
       navigate("/orders");
     } catch (err) {
@@ -123,7 +118,12 @@ const Checkout = () => {
       {/* Card Payment */}
       {paymentMethod === "CARD" && (
         <Elements stripe={stripePromise}>
-          <CardPayment total={total} onPaymentSuccess={(status) => placeOrder(status)} />
+          <CardPaymentForm
+            total={total}
+            onPaymentSuccess={(status, stripePaymentIntentId) =>
+              placeOrder(status, stripePaymentIntentId)
+            }
+          />
         </Elements>
       )}
 
