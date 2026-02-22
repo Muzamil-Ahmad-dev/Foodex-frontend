@@ -36,21 +36,21 @@ const Checkout = () => {
     setPlacingOrder(true);
 
     try {
+      // ⚡ Build order payload WITHOUT totalAmount (Mongoose calculates automatically)
       const orderPayload = {
         items: items.map((i) => ({
           menuItem: i._id,
           quantity: i.quantity,
           price: i.discountPrice || i.price,
         })),
-        totalAmount: total,
         deliveryAddress: address,
         contactNumber: phone,
         paymentMethod,
         paymentStatus,
-        stripePaymentIntentId, // ✅ Must send for CARD
+        stripePaymentIntentId, // only for CARD
       };
 
-      // 1️⃣ Create order
+      // 1️⃣ Create order in backend
       const orderRes = await dispatch(createOrder(orderPayload));
 
       if (orderRes.meta.requestStatus !== "fulfilled") {

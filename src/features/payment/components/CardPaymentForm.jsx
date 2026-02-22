@@ -31,7 +31,6 @@ const CardPaymentForm = ({ total, onPaymentSuccess }) => {
       }
 
       const clientSecret = data.clientSecret;
-      const paymentIntentId = data.paymentIntentId;
 
       // 2️⃣ Confirm payment with Stripe Elements
       const cardElement = elements.getElement(CardElement);
@@ -42,15 +41,13 @@ const CardPaymentForm = ({ total, onPaymentSuccess }) => {
         },
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
-      if (paymentIntent.status === "succeeded") {
-        // ✅ Pass both status and PaymentIntent ID
+      if (paymentIntent?.status === "succeeded") {
+        // ✅ Pass both status and PaymentIntent ID to Checkout
         onPaymentSuccess("Paid", paymentIntent.id);
       } else {
-        throw new Error(`Payment failed with status: ${paymentIntent.status}`);
+        throw new Error(`Payment failed with status: ${paymentIntent?.status}`);
       }
     } catch (err) {
       console.error("Stripe Payment Error:", err);
