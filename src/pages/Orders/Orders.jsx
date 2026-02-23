@@ -13,14 +13,22 @@ const statusColors = {
 
 const UserOrder = () => {
   const dispatch = useDispatch();
-  const { orders, loading } = useSelector((state) => state.orders);
+  const { orders, fetchingOrders, error } = useSelector((state) => state.orders);
 
   useEffect(() => {
     dispatch(fetchOrders());
   }, [dispatch]);
 
-  if (loading) {
+  if (fetchingOrders) {
     return <p className="p-6 text-center text-gray-400">Loading orders...</p>;
+  }
+
+  if (error) {
+    return <p className="p-6 text-center text-red-400">Error: {error}</p>;
+  }
+
+  if (!orders.length) {
+    return <p className="p-6 text-center text-gray-400">No orders found</p>;
   }
 
   return (
@@ -28,10 +36,6 @@ const UserOrder = () => {
       <h1 className="text-3xl font-bold text-amber-400 mb-6 text-center">
         Order History
       </h1>
-
-      {!orders.length && (
-        <p className="text-center text-gray-400">No orders found</p>
-      )}
 
       <div className="max-w-4xl mx-auto space-y-6">
         {orders.map((order, index) => (
@@ -46,9 +50,7 @@ const UserOrder = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
               <p className="text-sm text-amber-200">
                 Order ID:{" "}
-                <span className="font-semibold">
-                  #{order.orderKey}
-                </span>
+                <span className="font-semibold">#{order.orderKey || order._id}</span>
               </p>
 
               <span
@@ -56,7 +58,7 @@ const UserOrder = () => {
                   statusColors[order.status] || "bg-gray-500/20 text-gray-300"
                 }`}
               >
-                {order.status}
+                {order.status || "Unknown"}
               </span>
             </div>
 
@@ -64,39 +66,45 @@ const UserOrder = () => {
             <div className="mb-4">
               <p className="font-semibold mb-2 text-amber-300">Items</p>
               <ul className="space-y-1 text-sm text-amber-100">
-                {order.items.map((item, i) => (
-                  <li key={i}>
-                    {item.menuItem.name} × {item.quantity} — Rs.{" "}
-                    {item.price * item.quantity}
-                  </li>
-                ))}
+                {order.items.map((item, i) => {
+                  const name = item?.menuItem?.name || "Unknown Item";
+                  const quantity = item?.quantity || 0;
+                  const price = item?.price || 0;
+                  return (
+                    <li key={i}>
+                      {name} × {quantity} — Rs. {price * quantity}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
             {/* Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-amber-200">
               <p>
-                <b>Payment:</b> {order.paymentMethod} (
-                {order.paymentStatus})
+                <b>Payment:</b> {order.paymentMethod || "N/A"} (
+                {order.paymentStatus || "N/A"})
               </p>
               <p>
                 <b>Total:</b>{" "}
                 <span className="font-semibold text-amber-300">
-                  Rs. {order.totalAmount}
+                  Rs. {order.totalAmount || 0}
                 </span>
               </p>
               <p>
-                <b>Contact:</b> {order.contactNumber}
+                <b>Contact:</b> {order.contactNumber || "N/A"}
               </p>
               <p>
-                <b>Address:</b> {order.deliveryAddress}
+                <b>Address:</b> {order.deliveryAddress || "N/A"}
               </p>
             </div>
 
             {/* Date */}
             <p className="mt-4 text-xs text-gray-400">
               Ordered on{" "}
-              {new Date(order.createdAt).toLocaleString()}
+              {order.createdAt
+                ? new Date(order.createdAt).toLocaleString()
+                : "Unknown Date"}
             </p>
           </motion.div>
         ))}
