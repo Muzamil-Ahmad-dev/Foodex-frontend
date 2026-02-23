@@ -191,7 +191,7 @@
          {/* ---------- Bottom Footer Note ---------- */}
          <div className="border-t border-amber-800/30 pt-8 text-center space-y-2">
            <p className="text-amber-400 text-base sm:text-lg font-medium">
-             © 2025 Foodie-Frenzy. All rights reserved.
+             © 2025 Foodify All rights reserved.
            </p>
            <p className="text-gray-400 text-sm sm:text-base">
              Designed by{" "}
