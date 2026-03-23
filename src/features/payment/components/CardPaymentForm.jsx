@@ -109,7 +109,7 @@ const CardPaymentForm = ({ total, onPaymentSuccess }) => {
             : "bg-amber-400 hover:bg-amber-500 text-gray-900"
         }`}
       >
-        {loading ? "Processing Payment..." : `Pay ₹${total}`}
+        {loading ? "Processing Payment..." : `Pay  ${total}`}
       </motion.button>
     </motion.div>
   );
